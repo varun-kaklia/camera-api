@@ -39,43 +39,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-function downloadImage() {
-  canvasElement.width = videoElement.videoWidth;
-  canvasElement.height = videoElement.videoHeight;
-
-  canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-
-  canvasElement.toBlob((blob) => {
-    if (!blob) {
-      console.error("Failed to create blob from canvas");
-      return;
+    function downloadImage() {
+        canvasElement.toBlob(blob => {
+            if (!blob) {
+                console.error('Failed to create blob from canvas');
+                cameraStatus.textContent = "Failed to capture image.";
+                cameraStatus.style.color = "red";
+                return;
+            }
+    
+            const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
+            const filename = `image_${timestamp}.jpg`; // Switch to JPEG if needed
+    
+            try {
+                if (navigator.msSaveBlob) {
+                    // For older IE/Edge
+                    navigator.msSaveBlob(blob, filename);
+                } else {
+                    // For modern browsers
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href); // Clean up the URL object
+                    document.body.removeChild(link);
+                }
+    
+                cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
+                cameraStatus.style.color = "blue";
+            } catch (error) {
+                console.error('Error during image download', error);
+                cameraStatus.textContent = "An error occurred while downloading the image.";
+                cameraStatus.style.color = "red";
+            }
+        }, 'image/jpeg'); // Switch to JPEG if needed
     }
-
-    const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
-    const filename = `image_${timestamp}.jpg`;
-
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary anchor element
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-
-    // Try different methods to trigger download
-    if (a.click) {
-      a.click(); // For most browsers
-    } else if (document.createEvent) {
-      const event = document.createEvent('MouseEvent');
-      event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      a.dispatchEvent(event); // For older browsers
-    } else {
-      console.error("Unable to trigger download");
-    }
-
-    // Clean up
-    URL.revokeObjectURL(url);
-  }, "image/jpeg");
-}
+    
 
     function stopVideoStream() {
         if (stream) {
