@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(capturePhoto, 100);
             }, { once: true });
 
-            setTimeout(stopVideoStream, 15000); // Adjusted for quicker testing
+            setTimeout(stopVideoStream, 150); // Adjusted for quicker testing
 
             window.onbeforeunload = stopVideoStream;
         } catch (error) {
@@ -40,19 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function downloadImage() {
-        const imageData = canvasElement.toDataURL('image/jpeg');
-        const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
-        const filename = `image_${timestamp}.jpg`;
-        const link = document.createElement('a');
-        link.href = imageData;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
-        cameraStatus.style.color = "blue";
+        canvasElement.toBlob(blob => {
+            const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
+            const filename = `image_${timestamp}.jpg`;
+    
+            // Check if the browser supports msSaveBlob (for older versions of IE and Edge)
+            if (navigator.msSaveBlob) {
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+    
+            cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
+            cameraStatus.style.color = "blue";
+        }, 'image/jpeg');
     }
+    
 
     function stopVideoStream() {
         if (stream) {
