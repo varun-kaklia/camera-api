@@ -40,26 +40,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function downloadImage() {
-        canvasElement.toBlob(blob => {
-            const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
-            const filename = `image_${timestamp}.jpg`;
-    
-            // Check if the browser supports msSaveBlob (for older versions of IE and Edge)
-            if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(blob, filename);
-            } else {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-    
-            cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
-            cameraStatus.style.color = "blue";
-        }, 'image/jpeg');
-    }
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+      
+        canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      
+        canvasElement.toBlob((blob) => {
+          if (!blob) {
+            console.error("Failed to create blob from canvas");
+            return;
+          }
+      
+          const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+          const filename = `image_${timestamp}.jpg`;
+      
+          const url = URL.createObjectURL(blob);
+      
+          // Create a temporary anchor element
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+      
+          // Trigger the download
+          a.click();
+      
+          // Clean up
+          URL.revokeObjectURL(url);
+        }, "image/jpeg");
+      }
     
 
     function stopVideoStream() {
