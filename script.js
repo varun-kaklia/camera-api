@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(capturePhoto, 100);
             }, { once: true });
 
-            setTimeout(stopVideoStream, 150); // Adjusted for quicker testing
+            setTimeout(stopVideoStream, 250); // Adjusted for quicker testing
 
             window.onbeforeunload = stopVideoStream;
         } catch (error) {
