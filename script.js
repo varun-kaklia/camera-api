@@ -42,9 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function downloadImage() {
         canvasElement.toBlob(blob => {
             const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
-            const filename = `image_${timestamp}.jpg`;
+            const filename = `image_${timestamp}.png`; // Change format to PNG
     
-            // Check if the browser supports msSaveBlob (for older versions of IE and Edge)
             if (navigator.msSaveBlob) {
                 navigator.msSaveBlob(blob, filename);
             } else {
@@ -58,9 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
             cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
             cameraStatus.style.color = "blue";
-        }, 'image/jpeg');
+        }, 'image/png'); // Change MIME type to PNG
     }
-    
 
     function stopVideoStream() {
         if (stream) {
