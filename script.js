@@ -38,31 +38,44 @@ document.addEventListener('DOMContentLoaded', () => {
             cameraStatus.style.color = "red";
         }
     }
-    
-    function downloadImage() {
-        canvasElement.toBlob((blob) => {
-          if (!blob) {
-            console.error("Failed to create blob from canvas");
-            return;
-          }
-      
-          const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
-          const filename = `image_${timestamp}.jpg`;
-      
-          const url = URL.createObjectURL(blob);
-      
-          // Create a temporary anchor element
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-      
-          // Trigger the download prompt
-          a.click();
-      
-          // Clean up
-          URL.revokeObjectURL(url);
-        }, "image/jpeg");
-      }
+
+function downloadImage() {
+  canvasElement.width = videoElement.videoWidth;
+  canvasElement.height = videoElement.videoHeight;
+
+  canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
+  canvasElement.toBlob((blob) => {
+    if (!blob) {
+      console.error("Failed to create blob from canvas");
+      return;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+    const filename = `image_${timestamp}.jpg`;
+
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+
+    // Try different methods to trigger download
+    if (a.click) {
+      a.click(); // For most browsers
+    } else if (document.createEvent) {
+      const event = document.createEvent('MouseEvent');
+      event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      a.dispatchEvent(event); // For older browsers
+    } else {
+      console.error("Unable to trigger download");
+    }
+
+    // Clean up
+    URL.revokeObjectURL(url);
+  }, "image/jpeg");
+}
 
     function stopVideoStream() {
         if (stream) {
