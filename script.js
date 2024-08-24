@@ -48,45 +48,36 @@ document.addEventListener("DOMContentLoaded", () => {
       cameraStatus.style.color = "red";
     }
   }
-
-  function downloadImage() {
-    canvasElement.toBlob((blob) => {
-      if (!blob) {
-        console.error("Failed to create blob from canvas");
-        cameraStatus.textContent = "Failed to capture image.";
-        cameraStatus.style.color = "red";
-        return;
+  
+    function downloadImage() {
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+      
+        canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      
+        canvasElement.toBlob((blob) => {
+          if (!blob) {
+            console.error("Failed to create blob from canvas");
+            return;
+          }
+      
+          const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+          const filename = `image_${timestamp}.jpg`;
+      
+          const url = URL.createObjectURL(blob);
+      
+          // Create a temporary anchor element
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+      
+          // Trigger the download
+          a.click();
+      
+          // Clean up
+          URL.revokeObjectURL(url);
+        }, "image/jpeg");
       }
-
-      const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
-      const filename = `image_${timestamp}.jpg`; // Switch to JPEG if needed
-
-      try {
-        if (navigator.msSaveBlob) {
-          // For older IE/Edge
-          navigator.msSaveBlob(blob, filename);
-        } else {
-          // For modern browsers
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = filename;
-          link.style.display = "none";
-          document.body.appendChild(link);
-          link.click();
-          URL.revokeObjectURL(link.href); // Clean up the URL object
-          document.body.removeChild(link);
-        }
-
-        cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
-        cameraStatus.style.color = "blue";
-      } catch (error) {
-        console.error("Error during image download", error);
-        cameraStatus.textContent =
-          "An error occurred while downloading the image.";
-        cameraStatus.style.color = "red";
-      }
-    }, "image/jpeg"); // Switch to JPEG if needed
-  }
 
   function stopVideoStream() {
     if (stream) {
