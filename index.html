@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Camera Access and Capture</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <h1>Hey Parchaai welcome to this website..!</h1>
-    <div class="camera-container" style="display: none;">
+    <h1>Hey Parchaai, welcome to this website..!</h1>
+    <div class="camera-container">
         <video id="videoElement" autoplay></video>
     </div>
-    <div id="cameraStatus" class="status" style="display: none;"></div>
-    <div class="photo-container" style="display: none;">
+    <div id="cameraStatus" class="status"></div>
+    <div class="photo-container">
         <h2>Captured Photo:</h2>
         <canvas id="canvasElement"></canvas>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Include Firebase SDKs with compat libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.0/firebase-storage-compat.js"></script>
+
+    <!-- Include your custom script -->
+    <script src="script.js" defer></script>
 </body>
 </html>

